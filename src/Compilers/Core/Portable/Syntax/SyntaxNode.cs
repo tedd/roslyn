@@ -876,7 +876,9 @@ namespace Microsoft.CodeAnalysis
         /// <param name="descendIntoTrivia">Determines if nodes that are part of structured trivia are included in the list.</param>
         public IEnumerable<SyntaxNode> DescendantNodes(Func<SyntaxNode, bool>? descendIntoChildren = null, bool descendIntoTrivia = false)
         {
-            return DescendantNodesImpl(this.FullSpan, descendIntoChildren, descendIntoTrivia, includeSelf: false);
+            return descendIntoTrivia
+                ? DescendantNodesImpl(this.FullSpan, descendIntoChildren, descendIntoTrivia: true, includeSelf: false)
+                : DescendantNodesWithoutSpan(descendIntoChildren, includeSelf: false);
         }
 
         /// <summary>
@@ -897,7 +899,9 @@ namespace Microsoft.CodeAnalysis
         /// <param name="descendIntoTrivia">Determines if nodes that are part of structured trivia are included in the list.</param>
         public IEnumerable<SyntaxNode> DescendantNodesAndSelf(Func<SyntaxNode, bool>? descendIntoChildren = null, bool descendIntoTrivia = false)
         {
-            return DescendantNodesImpl(this.FullSpan, descendIntoChildren, descendIntoTrivia, includeSelf: true);
+            return descendIntoTrivia
+                ? DescendantNodesImpl(this.FullSpan, descendIntoChildren, descendIntoTrivia: true, includeSelf: true)
+                : DescendantNodesWithoutSpan(descendIntoChildren, includeSelf: true);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -114,6 +114,18 @@ namespace Microsoft.CodeAnalysis
 
                 _stackPtr--;
                 return false;
+            }
+
+            public SyntaxNode? TryGetNextAsNode()
+            {
+                Debug.Assert(_stack is object);
+                var node = _stack[_stackPtr].TryMoveNextAndGetCurrentAsNode();
+                if (node is null)
+                {
+                    _stackPtr--;
+                }
+
+                return node;
             }
 
             public SyntaxNode? TryGetNextAsNodeInSpan(in TextSpan span)
@@ -425,6 +437,25 @@ namespace Microsoft.CodeAnalysis
                 _triviaStack.Dispose();
                 _tokenStack?.Free();
                 _discriminatorStack?.Free();
+            }
+        }
+
+        private IEnumerable<SyntaxNode> DescendantNodesWithoutSpan(Func<SyntaxNode, bool>? descendIntoChildren, bool includeSelf)
+        {
+            if (includeSelf)
+            {
+                yield return this;
+            }
+
+            // The full span of the starting node covers every descendant, including zero-width nodes.
+            using var stack = new ChildSyntaxListEnumeratorStack(this, descendIntoChildrenGreen: null, descendIntoChildren);
+            while (stack.IsNotEmpty)
+            {
+                if (stack.TryGetNextAsNode() is { } node)
+                {
+                    stack.PushChildren(node);
+                    yield return node;
+                }
             }
         }
 
